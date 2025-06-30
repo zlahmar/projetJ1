@@ -59,4 +59,50 @@ describe('US001 - Créer une tâche', () => {
     expect(task.assignee).toBe(user);
     expect(task.assignee.nom).toBe('Bob');
   });
+
+  describe("Dates d'échéance et statut de retard", () => {
+    test('devrait créer une tâche avec une date d\'échéance', () => {
+      // GIVEN
+      const dueDate = new Date('2024-12-31T23:59:59');
+      // WHEN
+      const task = new Task('Finir le projet', '', null, dueDate);
+      // THEN
+      expect(task.dueDate).toEqual(dueDate);
+    });
+
+    test('devrait considérer une tâche comme non en retard si la date d\'échéance est dans le futur', () => {
+      // GIVEN
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const task = new Task('Tâche future', '', null, tomorrow);
+      // THEN
+      expect(task.isOverdue()).toBe(false);
+    });
+
+    test('devrait considérer une tâche comme en retard si la date d\'échéance est dans le passé', () => {
+      // GIVEN
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const task = new Task('Tâche passée', '', null, yesterday);
+      // THEN
+      expect(task.isOverdue()).toBe(true);
+    });
+
+    test('ne devrait pas considérer une tâche comme en retard si elle n\'a pas de date d\'échéance', () => {
+      // GIVEN
+      const task = new Task('Tâche sans date');
+      // THEN
+      expect(task.isOverdue()).toBe(false);
+    });
+
+    test('ne devrait pas considérer une tâche comme en retard si elle est déjà terminée', () => {
+      // GIVEN
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const task = new Task('Tâche terminée', '', null, yesterday);
+      task.statut = 'DONE'; // On anticipe un futur statut
+      // THEN
+      expect(task.isOverdue()).toBe(false);
+    });
+  });
 }); 
