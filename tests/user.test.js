@@ -1,9 +1,9 @@
-const User = require('../src/user');
+const User = require("../src/user");
 
-describe('User - Gestion des utilisateurs', () => {
-  test('devrait créer un utilisateur avec un ID unique et un nom', () => {
+describe("User - Gestion des utilisateurs", () => {
+  test("devrait créer un utilisateur avec un ID unique et un nom", () => {
     // GIVEN
-    const nom = 'Alice';
+    const nom = "Alice";
 
     // WHEN
     const user = new User(nom);
@@ -13,11 +13,11 @@ describe('User - Gestion des utilisateurs', () => {
     expect(user.nom).toBe(nom);
   });
 
-  test('devrait lever une erreur si le nom est vide', () => {
+  test("devrait lever une erreur si le nom est vide", () => {
     // GIVEN
-    const nomVide = '';
+    const nomVide = "";
 
     // WHEN & THEN
-    expect(() => new User(nomVide)).toThrow('User name is required');
+    expect(() => new User(nomVide)).toThrow("User name is required");
   });
-}); 
+});

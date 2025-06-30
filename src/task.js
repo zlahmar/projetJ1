@@ -1,4 +1,4 @@
-const { randomUUID } = require('crypto');
+const { randomUUID } = require("crypto");
 
 class Task {
   constructor(titre, description = "", assignee = null, dueDate = null) {
@@ -6,7 +6,7 @@ class Task {
     this._validateDescription(description);
 
     this.id = randomUUID();
-    this.titre = titre;
+    this.titre = titre.trim();
     this.description = description;
     this.statut = "TODO";
     this.dateCreation = new Date();
@@ -15,22 +15,24 @@ class Task {
   }
 
   _validateTitle(titre) {
-    if (!titre || titre.trim() === '') {
-      throw new Error('Title is required');
+    if (!titre || titre.trim() === "") {
+      throw new Error("Title is required");
     }
     if (titre.length > 100) {
-      throw new Error('Title cannot exceed 100 characters');
+      throw new Error("Title cannot exceed 100 characters");
     }
   }
 
   _validateDescription(description) {
-    // La validation de la description sera ajoutée ici plus tard
+    if (description && description.length > 500) {
+      throw new Error("Description cannot exceed 500 characters");
+    }
   }
 
   update(updates) {
     if (updates.titre !== undefined) {
       this._validateTitle(updates.titre);
-      this.titre = updates.titre;
+      this.titre = updates.titre.trim();
     }
     if (updates.description !== undefined) {
       this._validateDescription(updates.description);
@@ -39,11 +41,11 @@ class Task {
   }
 
   isOverdue() {
-    if (this.statut === 'DONE' || !this.dueDate) {
+    if (this.statut === "DONE" || !this.dueDate) {
       return false;
     }
     return new Date() > this.dueDate;
   }
 }
 
-module.exports = Task; 
+module.exports = Task;
