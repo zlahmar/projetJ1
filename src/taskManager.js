@@ -9,13 +9,15 @@ class TaskManager {
 
   listTasks({ page = 1, limit = 20, assigneeId = null } = {}) {
     if (limit <= 0) {
-      throw new Error('Invalid page size');
+      throw new Error("Invalid page size");
     }
 
     let tasksToProcess = this.tasks;
 
     if (assigneeId) {
-      tasksToProcess = tasksToProcess.filter(task => task.assignee && task.assignee.id === assigneeId);
+      tasksToProcess = tasksToProcess.filter(
+        (task) => task.assignee && task.assignee.id === assigneeId,
+      );
     }
 
     const totalItems = tasksToProcess.length;
@@ -30,24 +32,24 @@ class TaskManager {
         totalItems,
         totalPages,
         currentPage: page,
-        pageSize: limit
-      }
+        pageSize: limit,
+      },
     };
   }
 
   findTaskById(taskId) {
-    return this.tasks.find(task => task.id === taskId);
+    return this.tasks.find((task) => task.id === taskId);
   }
 
   updateTaskStatus(taskId, status) {
-    const allowedStatus = ['TODO', 'ONGOING', 'DONE'];
+    const allowedStatus = ["TODO", "ONGOING", "DONE"];
     if (!allowedStatus.includes(status)) {
-      throw new Error('Invalid status. Allowed values: TODO, ONGOING, DONE');
+      throw new Error("Invalid status. Allowed values: TODO, ONGOING, DONE");
     }
 
     const task = this.findTaskById(taskId);
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     task.statut = status;
@@ -57,7 +59,7 @@ class TaskManager {
   updateTask(taskId, updates) {
     const task = this.findTaskById(taskId);
     if (!task) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     // On délègue la logique de mise à jour à la tâche elle-même
@@ -67,14 +69,14 @@ class TaskManager {
   }
 
   deleteTask(taskId) {
-    const taskIndex = this.tasks.findIndex(task => task.id === taskId);
+    const taskIndex = this.tasks.findIndex((task) => task.id === taskId);
 
     if (taskIndex === -1) {
-      throw new Error('Task not found');
+      throw new Error("Task not found");
     }
 
     this.tasks.splice(taskIndex, 1);
   }
 }
 
-module.exports = TaskManager; 
+module.exports = TaskManager;
