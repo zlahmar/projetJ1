@@ -1,4 +1,5 @@
 const Task = require('../src/task');
+const User = require('../src/user');
 
 describe('US001 - Créer une tâche', () => {
   test("devrait créer une tâche avec un ID unique, un titre, une description vide, un statut 'TODO' et une date de création", () => {
@@ -14,6 +15,7 @@ describe('US001 - Créer une tâche', () => {
     expect(tache.description).toBe("");
     expect(tache.statut).toBe("TODO");
     expect(tache.dateCreation).toBeInstanceOf(Date);
+    expect(tache.assignee).toBeNull();
     
     const diffInSeconds = (new Date() - tache.dateCreation) / 1000;
     expect(diffInSeconds).toBeLessThan(2);
@@ -46,5 +48,15 @@ describe('US001 - Créer une tâche', () => {
 
     // WHEN & THEN
     expect(() => new Task(titreTropLong)).toThrow('Title cannot exceed 100 characters');
+  });
+
+  test('devrait assigner une tâche à un utilisateur', () => {
+    // GIVEN
+    const user = new User('Bob');
+    const task = new Task('Faire le café', '', user);
+
+    // THEN
+    expect(task.assignee).toBe(user);
+    expect(task.assignee.nom).toBe('Bob');
   });
 }); 
