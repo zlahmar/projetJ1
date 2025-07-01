@@ -54,7 +54,7 @@ describe("US001 - Créer une tâche", () => {
 
   test("devrait assigner une tâche à un utilisateur", () => {
     // GIVEN
-    const user = new User("Bob");
+    const user = new User("Bob", "bob@example.com");
     const task = new Task("Faire le café", "", user);
 
     // THEN
