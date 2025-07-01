@@ -1,7 +1,9 @@
 const Task = require("../src/task");
 const User = require("../src/user");
 
+// US001 - Créer une tâche
 describe("US001 - Créer une tâche", () => {
+  // Critère : Création d'une tâche avec titre, description, statut, date, assignation (US001)
   test("devrait créer une tâche avec un ID unique, un titre, une description vide, un statut 'TODO' et une date de création", () => {
     // GIVEN
     const titre = "Faire les courses";
@@ -18,10 +20,12 @@ describe("US001 - Créer une tâche", () => {
     expect(diffInSeconds).toBeLessThan(2);
   });
 
+  // Critère : Erreur si titre vide (US001)
   test("devrait lever une erreur si le titre est vide", () => {
     expect(() => new Task("")).toThrow("Title is required");
   });
 
+  // Critère : Création avec description valide (US001)
   test("devrait créer une tâche avec une description valide", () => {
     const titre = "Apprendre Jest";
     const description = "Faire le tutoriel officiel de Jest.";
@@ -30,11 +34,13 @@ describe("US001 - Créer une tâche", () => {
     expect(tache.description).toBe(description);
   });
 
+  // Critère : Erreur si titre trop long (US001)
   test("devrait lever une erreur si le titre dépasse 100 caractères", () => {
     const longTitre = "a".repeat(101);
     expect(() => new Task(longTitre)).toThrow("Title cannot exceed 100 characters");
   });
 
+  // Critère : Assignation via constructeur (US001)
   test("devrait assigner une tâche à un utilisateur via constructeur", () => {
     const user = new User("Bob", "bob@example.com");
     const task = new Task("Faire le café", "", user);
@@ -90,18 +96,21 @@ describe("US001 - Créer une tâche", () => {
 });
 
 
+// US014 - Définir une date d'échéance
 describe("US014 - Définir une date d'échéance", () => {
   let task;
   beforeEach(() => {
     task = new Task("Tâche échéance");
   });
 
+  // Critère : setDueDate accepte une Date valide (US014)
   test("setDueDate accepte une Date valide", () => {
     const future = new Date(Date.now() + 5_000);
     task.setDueDate(future);
     expect(task.dueDate).toEqual(future);
   });
 
+  // Critère : Modifier une date d'échéance existante (US014)
   test("modifie une date d'échéance existante", () => {
     const d1 = new Date(Date.now() + 5_000);
     const d2 = new Date(Date.now() + 10_000);
@@ -110,6 +119,7 @@ describe("US014 - Définir une date d'échéance", () => {
     expect(task.dueDate).toEqual(d2);
   });
 
+  // Critère : clearDueDate supprime la date d'échéance (US014)
   test("clearDueDate supprime la date d'échéance", () => {
     const d = new Date();
     task.setDueDate(d);
@@ -117,10 +127,12 @@ describe("US014 - Définir une date d'échéance", () => {
     expect(task.dueDate).toBeNull();
   });
 
+  // Critère : Erreur si format de date invalide (US014)
   test("erreur si format de date invalide", () => {
     expect(() => task.setDueDate("not a date")).toThrow("Invalid date format");
   });
 
+  // Critère : Warning si échéance passée (US014)
   test("enregistre un warning dans l'historique si échéance passée", () => {
     const past = new Date();
     past.setDate(past.getDate() - 1);
@@ -131,16 +143,19 @@ describe("US014 - Définir une date d'échéance", () => {
 });
 
 
+// US016 - Définir des priorités
 describe("US016 - Définir des priorités", () => {
   let task;
   beforeEach(() => {
     task = new Task("Tâche priorité");
   });
 
+  // Critère : Priorité par défaut (US016)
   test("priorité par défaut est NORMAL", () => {
     expect(task.priority).toBe("NORMAL");
   });
 
+  // Critère : setPriority accepte LOW, NORMAL, HIGH, CRITICAL (US016)
   test.each(["LOW", "NORMAL", "HIGH", "CRITICAL"])(
     "setPriority accepte %s",
     (p) => {
@@ -149,12 +164,14 @@ describe("US016 - Définir des priorités", () => {
     }
   );
 
+  // Critère : Erreur si priorité invalide (US016)
   test("erreur si priorité invalide", () => {
     expect(() => task.setPriority("WRONG")).toThrow(/Invalid priority/);
   });
 });
 
 
+// US017 - Catégoriser avec des tags
 describe("US017 - Catégoriser avec des tags", () => {
   let task;
   beforeEach(() => {
@@ -181,18 +198,21 @@ describe("US017 - Catégoriser avec des tags", () => {
 });
 
 
+// US018 - Consulter l'historique d'une tâche
 describe("US018 - Consulter l'historique d'une tâche", () => {
   let task;
   beforeEach(() => {
     task = new Task("Tâche historique");
   });
 
+  // Critère : Enregistre l'événement CREATION (US018)
   test("enregistre l'événement CREATION", () => {
     const evt = task.history.find((e) => e.type === "CREATION");
     expect(evt).toBeDefined();
     expect(evt.data.titre).toBe("Tâche historique");
   });
 
+  // Critère : Enregistre les mises à jour de titre et description (US018)
   test("enregistre les mises à jour de titre et description", () => {
     task.update({ titre: "Nouveau titre", description: "Desc" });
     const evTitle = task.history.find((e) => e.type === "UPDATE_TITLE");
@@ -202,6 +222,7 @@ describe("US018 - Consulter l'historique d'une tâche", () => {
     expect(evDesc.data.to).toBe("Desc");
   });
 
+  // Critère : Enregistre changements de priorité, tags, dueDate (US018)
   test("enregistre les changements de priorité, tags et dueDate", () => {
     task.setPriority("HIGH");
     task.addTags("foo");

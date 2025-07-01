@@ -1,4 +1,5 @@
 const User = require('./user');
+const AppError = require('./errors');
 
 class UserManager {
   constructor() {
@@ -6,9 +7,9 @@ class UserManager {
   }
 
   addUser(nom, email) {
-    // Vérifier l'unicité de l'email
+    // Vérifier l'unicité du mail
     if (this.users.some((user) => user.email === email)) {
-      throw new Error('Email already in use');
+      throw new AppError('Email already in use', 'EMAIL_IN_USE');
     }
 
     const newUser = new User(nom, email);
@@ -17,7 +18,11 @@ class UserManager {
   }
 
   getUserById(id) {
-    return this.users.find((user) => user.id === id) || null;
+    const user = this.users.find((user) => user.id === id);
+    if (!user) {
+      throw new AppError('User not found', 'USER_NOT_FOUND');
+    }
+    return user;
   }
 
   listUsers(options = {}) {
@@ -25,7 +30,6 @@ class UserManager {
 
     let filteredUsers = [...this.users];
 
-    // Tri
     filteredUsers.sort((a, b) => {
       const fieldA = a[sort.field];
       const fieldB = b[sort.field];

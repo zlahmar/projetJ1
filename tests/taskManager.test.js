@@ -13,25 +13,29 @@ describe("TaskManager", () => {
     userAlice = userManager.addUser("Alice", "alice@example.com");
   });
 
+      // Critère : Ajout d'une tâche (US001)
   test("devrait ajouter une tâche", () => {
     taskManager.addTask(new Task("Nouvelle Tâche"));
     expect(taskManager.tasks.length).toBe(1);
   });
 
+      // Critère : Suppression d'une tâche (US005)
   test("devrait supprimer une tâche", () => {
     const task = taskManager.addTask(new Task("À supprimer"));
     taskManager.deleteTask(task.id);
     expect(taskManager.tasks.length).toBe(0);
   });
 
+      // Critère : Modification d'une tâche (US003)
   test("devrait mettre à jour une tâche", () => {
     const task = taskManager.addTask(new Task("Titre original"));
     taskManager.updateTask(task.id, { titre: "Nouveau titre" });
     expect(taskManager.getTaskById(task.id).titre).toBe("Nouveau titre");
   });
 
+      // Critère : Filtre par statut (US008)
   test("devrait filtrer les tâches par statut", () => {
-    taskManager.addTask(new Task("Tâche 1")); // TODO
+    taskManager.addTask(new Task("Tâche 1"));
     const done = new Task("Tâche 2");
     done.statut = "DONE";
     taskManager.addTask(done);
@@ -41,6 +45,7 @@ describe("TaskManager", () => {
     expect(data[0].statut).toBe("DONE");
   });
 
+      // Critère : Recherche par mot-clé (US007)
   test("devrait rechercher une tâche par mot-clé", () => {
     taskManager.addTask(new Task("Faire du sport"));
     taskManager.addTask(new Task("Apprendre le sport"));
@@ -49,12 +54,14 @@ describe("TaskManager", () => {
     expect(data[0].titre).toBe("Apprendre le sport");
   });
 
+    // Critère : Assigner une tâche (US012)
   test("devrait assigner une tâche à un utilisateur", () => {
     const task = taskManager.addTask(new Task("Tâche assignable"));
     taskManager.assignTask(task.id, userAlice.id);
     expect(taskManager.getTaskById(task.id).assignee.id).toBe(userAlice.id);
   });
 
+      // Critère : Filtrer par utilisateur assigné (US013)
   test("devrait filtrer par tâches assignées à un utilisateur", () => {
     taskManager.addTask(new Task("Pour Alice", "", userAlice));
     taskManager.addTask(new Task("Sans assignation"));
@@ -63,6 +70,7 @@ describe("TaskManager", () => {
     expect(data).toHaveLength(1);
   });
 
+      // Critère : Tri des tâches (US009)
   test("devrait trier les tâches par titre", () => {
     taskManager.addTask(new Task("C"));
     taskManager.addTask(new Task("A"));
@@ -72,7 +80,7 @@ describe("TaskManager", () => {
     expect(data.map((t) => t.titre)).toEqual(["A", "B", "C"]);
   });
 
-
+  // US001 - Créer une tâche
   describe("US014 - setTaskDueDate & clearTaskDueDate", () => {
     test("erreur si l'ID n'existe pas", () => {
       expect(() =>
@@ -91,7 +99,7 @@ describe("TaskManager", () => {
     });
   });
 
-
+  // US015 - Filtrer les tâches en retard
   describe("US015 - Filtrer les tâches en retard", () => {
     test("listTasks({ dueOverdue: true }) ne retourne que les tâches en retard", () => {
       const tOld = taskManager.addTask(new Task("Tâche old"));
@@ -110,7 +118,7 @@ describe("TaskManager", () => {
     });
   });
 
-
+  // US016 - Définir des priorités et tri/filter
   describe("US016 - Définir des priorités et tri/filter", () => {
     test("tri par priorité asc", () => {
       const tLow = taskManager.addTask(new Task("Low"));
@@ -137,7 +145,7 @@ describe("TaskManager", () => {
     });
   });
 
-
+  // US017 - Catégoriser avec des tags
   describe("US017 - Catégoriser avec des tags", () => {
     test("listTasks filtre par au moins un tag", () => {
       const a = taskManager.addTask(new Task("A"));
@@ -161,7 +169,7 @@ describe("TaskManager", () => {
     });
   });
 
-
+  // US018 - getTaskHistory
   describe("US018 - getTaskHistory", () => {
     test("retourne les événements triés et paginés", () => {
       const t = taskManager.addTask(new Task("Hist"));

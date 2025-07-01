@@ -1,3 +1,5 @@
+const AppError = require('./errors');
+
 class TaskManager {
   constructor(userManager) {
     this.tasks = [];
@@ -11,14 +13,14 @@ class TaskManager {
 
   assignTask(taskId, userId) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
 
     const old = task.assignee;
     if (userId === null) {
       task.assignee = null;
     } else {
       const user = this.userManager.getUserById(userId);
-      if (!user) throw new Error("User not found");
+      if (!user) throw new AppError("User not found", "USER_NOT_FOUND");
       task.assignee = user;
     }
     task._recordEvent("ASSIGN", { from: old, to: task.assignee });
@@ -26,7 +28,9 @@ class TaskManager {
   }
 
   getTaskById(id) {
-    return this.tasks.find((t) => t.id === id);
+    const task = this.tasks.find((t) => t.id === id);
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
+    return task;
   }
 
   listTasks(options = {}) {
@@ -95,43 +99,43 @@ class TaskManager {
 
   updateTask(taskId, updates) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.update(updates);
   }
 
   updateTaskStatus(taskId, status) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.updateStatus(status);
   }
 
   setTaskDueDate(taskId, date) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.setDueDate(date);
   }
 
   clearTaskDueDate(taskId) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.clearDueDate();
   }
 
   setTaskPriority(taskId, priority) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.setPriority(priority);
   }
 
   addTaskTags(taskId, ...tags) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.addTags(...tags);
   }
 
   removeTaskTag(taskId, tag) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     return task.removeTag(tag);
   }
 
@@ -145,7 +149,7 @@ class TaskManager {
 
   getTaskHistory(taskId, { page = 1, limit = 20 } = {}) {
     const task = this.getTaskById(taskId);
-    if (!task) throw new Error("Task not found");
+    if (!task) throw new AppError("Task not found", "TASK_NOT_FOUND");
     const sorted = [...task.history].sort(
       (a, b) => b.date.getTime() - a.date.getTime()
     );
@@ -160,7 +164,7 @@ class TaskManager {
 
   deleteTask(taskId) {
     const idx = this.tasks.findIndex((t) => t.id === taskId);
-    if (idx === -1) throw new Error("Task not found");
+    if (idx === -1) throw new AppError("Task not found", "TASK_NOT_FOUND");
     this.tasks.splice(idx, 1);
   }
 }

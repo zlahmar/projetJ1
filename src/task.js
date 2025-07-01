@@ -1,4 +1,5 @@
 const { randomUUID } = require("crypto");
+const AppError = require("./errors");
 
 const ALLOWED_PRIORITIES = ["LOW", "NORMAL", "HIGH", "CRITICAL"];
 
@@ -22,25 +23,26 @@ class Task {
   }
 
   _validateTitle(titre) {
-    if (!titre || titre.trim() === "") throw new Error("Title is required");
-    if (titre.length > 100) throw new Error("Title cannot exceed 100 characters");
+    if (!titre || titre.trim() === "") throw new AppError("Title is required", "TITLE_REQUIRED");
+    if (titre.length > 100) throw new AppError("Title cannot exceed 100 characters", "TITLE_TOO_LONG");
   }
 
   _validateDescription(description) {
     if (description && description.length > 500)
-      throw new Error("Description cannot exceed 500 characters");
+      throw new AppError("Description cannot exceed 500 characters", "DESCRIPTION_TOO_LONG");
   }
 
   _validatePriority(priority) {
     if (!ALLOWED_PRIORITIES.includes(priority))
-      throw new Error(
-        `Invalid priority. Allowed values: ${ALLOWED_PRIORITIES.join(", ")}`
+      throw new AppError(
+        `Invalid priority. Allowed values: ${ALLOWED_PRIORITIES.join(", ")}`,
+        "PRIORITY_INVALID"
       );
   }
 
   _validateTag(tag) {
     if (!tag || tag.trim() === "" || tag.length > 20) {
-      throw new Error("Invalid tag validation");
+      throw new AppError("Invalid tag validation", "TAG_INVALID");
     }
   }
 
@@ -71,7 +73,7 @@ class Task {
   setDueDate(date) {
     const old = this.dueDate;
     if (!(date instanceof Date) || isNaN(date)) {
-      throw new Error("Invalid date format");
+      throw new AppError("Invalid date format", "DATE_INVALID");
     }
     const isPast = date < new Date();
     this.dueDate = date;
@@ -117,7 +119,7 @@ class Task {
   updateStatus(newStatus) {
     const allowed = ["TODO", "ONGOING", "DONE"];
     if (!allowed.includes(newStatus)) {
-      throw new Error(`Invalid status. Allowed values: ${allowed.join(", ")}`);
+      throw new AppError(`Invalid status. Allowed values: ${allowed.join(", ")}`, "STATUS_INVALID");
     }
     const old = this.statut;
     this.statut = newStatus;
@@ -127,7 +129,7 @@ class Task {
 
   isOverdue() {
     if (this.statut === "DONE" || !this.dueDate) return false;
-    // On ne marque pas en retard si échéance aujourd’hui
+    // On ne marque pas en retard si échéance aujourd'hui
     const now = new Date();
     return now > this.dueDate && now.toDateString() !== this.dueDate.toDateString();
   }
