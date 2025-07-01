@@ -5,10 +5,8 @@ describe("US001 - Créer une tâche", () => {
   test("devrait créer une tâche avec un ID unique, un titre, une description vide, un statut 'TODO' et une date de création", () => {
     // GIVEN
     const titre = "Faire les courses";
-
     // WHEN
     const tache = new Task(titre);
-
     // THEN
     expect(tache.id).toBeDefined();
     expect(tache.titre).toBe(titre);
@@ -16,104 +14,202 @@ describe("US001 - Créer une tâche", () => {
     expect(tache.statut).toBe("TODO");
     expect(tache.dateCreation).toBeInstanceOf(Date);
     expect(tache.assignee).toBeNull();
-
     const diffInSeconds = (new Date() - tache.dateCreation) / 1000;
     expect(diffInSeconds).toBeLessThan(2);
   });
 
   test("devrait lever une erreur si le titre est vide", () => {
-    // GIVEN
-    const titreVide = "";
-
-    // WHEN & THEN
-    expect(() => new Task(titreVide)).toThrow("Title is required");
+    expect(() => new Task("")).toThrow("Title is required");
   });
 
   test("devrait créer une tâche avec une description valide", () => {
-    // GIVEN
     const titre = "Apprendre Jest";
     const description = "Faire le tutoriel officiel de Jest.";
-
-    // WHEN
     const tache = new Task(titre, description);
-
-    // THEN
     expect(tache.titre).toBe(titre);
     expect(tache.description).toBe(description);
   });
 
   test("devrait lever une erreur si le titre dépasse 100 caractères", () => {
-    // GIVEN
-    const titreTropLong = "a".repeat(101);
-
-    // WHEN & THEN
-    expect(() => new Task(titreTropLong)).toThrow(
-      "Title cannot exceed 100 characters",
-    );
+    const longTitre = "a".repeat(101);
+    expect(() => new Task(longTitre)).toThrow("Title cannot exceed 100 characters");
   });
 
-  test("devrait assigner une tâche à un utilisateur", () => {
-    // GIVEN
+  test("devrait assigner une tâche à un utilisateur via constructeur", () => {
     const user = new User("Bob", "bob@example.com");
     const task = new Task("Faire le café", "", user);
-
-    // THEN
     expect(task.assignee).toBe(user);
     expect(task.assignee.nom).toBe("Bob");
   });
 
   describe("Dates d'échéance et statut de retard", () => {
     test("devrait créer une tâche avec une date d'échéance", () => {
-      // GIVEN
       const dueDate = new Date("2024-12-31T23:59:59");
-      // WHEN
       const task = new Task("Finir le projet", "", null, dueDate);
-      // THEN
       expect(task.dueDate).toEqual(dueDate);
     });
 
     test("devrait considérer une tâche comme non en retard si la date d'échéance est dans le futur", () => {
-      // GIVEN
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const task = new Task("Tâche future", "", null, tomorrow);
-      // THEN
       expect(task.isOverdue()).toBe(false);
     });
 
-    test("devrait considérer une tâche comme en retard si la date d'échéance est dans le passé", () => {
-      // GIVEN
+    test("devrait considérer une tâche comme en retard si la date d'échéance est dans le passé (hier)", () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const task = new Task("Tâche passée", "", null, yesterday);
-      // THEN
       expect(task.isOverdue()).toBe(true);
     });
 
     test("ne devrait pas considérer une tâche comme en retard si elle n'a pas de date d'échéance", () => {
-      // GIVEN
       const task = new Task("Tâche sans date");
-      // THEN
       expect(task.isOverdue()).toBe(false);
     });
 
     test("ne devrait pas considérer une tâche comme en retard si elle est déjà terminée", () => {
-      // GIVEN
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const task = new Task("Tâche terminée", "", null, yesterday);
-      task.statut = "DONE"; // On anticipe un futur statut
-      // THEN
+      task.statut = "DONE";
+      expect(task.isOverdue()).toBe(false);
+    });
+
+    test("ne devrait pas considérer une tâche comme en retard si échéance aujourd'hui", () => {
+      const today = new Date();
+      const task = new Task("Échéance aujourd'hui", "", null, today);
       expect(task.isOverdue()).toBe(false);
     });
   });
 
   test("devrait nettoyer les espaces du titre à la création", () => {
-    // GIVEN
-    const titreAvecEspaces = "  Mon titre avec espaces  ";
-    // WHEN
-    const task = new Task(titreAvecEspaces);
-    // THEN
+    const task = new Task("  Mon titre avec espaces  ");
     expect(task.titre).toBe("Mon titre avec espaces");
+  });
+});
+
+
+describe("US014 - Définir une date d'échéance", () => {
+  let task;
+  beforeEach(() => {
+    task = new Task("Tâche échéance");
+  });
+
+  test("setDueDate accepte une Date valide", () => {
+    const future = new Date(Date.now() + 5_000);
+    task.setDueDate(future);
+    expect(task.dueDate).toEqual(future);
+  });
+
+  test("modifie une date d'échéance existante", () => {
+    const d1 = new Date(Date.now() + 5_000);
+    const d2 = new Date(Date.now() + 10_000);
+    task.setDueDate(d1);
+    task.setDueDate(d2);
+    expect(task.dueDate).toEqual(d2);
+  });
+
+  test("clearDueDate supprime la date d'échéance", () => {
+    const d = new Date();
+    task.setDueDate(d);
+    task.clearDueDate();
+    expect(task.dueDate).toBeNull();
+  });
+
+  test("erreur si format de date invalide", () => {
+    expect(() => task.setDueDate("not a date")).toThrow("Invalid date format");
+  });
+
+  test("enregistre un warning dans l'historique si échéance passée", () => {
+    const past = new Date();
+    past.setDate(past.getDate() - 1);
+    task.setDueDate(past);
+    const evt = task.history.find((e) => e.type === "SET_DUE_DATE");
+    expect(evt.data.warning).toBe(true);
+  });
+});
+
+
+describe("US016 - Définir des priorités", () => {
+  let task;
+  beforeEach(() => {
+    task = new Task("Tâche priorité");
+  });
+
+  test("priorité par défaut est NORMAL", () => {
+    expect(task.priority).toBe("NORMAL");
+  });
+
+  test.each(["LOW", "NORMAL", "HIGH", "CRITICAL"])(
+    "setPriority accepte %s",
+    (p) => {
+      task.setPriority(p);
+      expect(task.priority).toBe(p);
+    }
+  );
+
+  test("erreur si priorité invalide", () => {
+    expect(() => task.setPriority("WRONG")).toThrow(/Invalid priority/);
+  });
+});
+
+
+describe("US017 - Catégoriser avec des tags", () => {
+  let task;
+  beforeEach(() => {
+    task = new Task("Tâche tags");
+  });
+
+  test("ajoute et supprime des tags", () => {
+    task.addTags("UI", "backend");
+    expect(task.tags).toEqual(["UI", "backend"]);
+    task.removeTag("UI");
+    expect(task.tags).toEqual(["backend"]);
+  });
+
+  test("n'ajoute pas de doublons et préserve l'ordre", () => {
+    task.addTags("A", "B");
+    task.addTags("B", "C");
+    expect(task.tags).toEqual(["A", "B", "C"]);
+  });
+
+  test("erreur si tag vide ou trop long", () => {
+    expect(() => task.addTags("", "X")).toThrow("Invalid tag validation");
+    expect(() => task.addTags("A".repeat(21))).toThrow("Invalid tag validation");
+  });
+});
+
+
+describe("US018 - Consulter l'historique d'une tâche", () => {
+  let task;
+  beforeEach(() => {
+    task = new Task("Tâche historique");
+  });
+
+  test("enregistre l'événement CREATION", () => {
+    const evt = task.history.find((e) => e.type === "CREATION");
+    expect(evt).toBeDefined();
+    expect(evt.data.titre).toBe("Tâche historique");
+  });
+
+  test("enregistre les mises à jour de titre et description", () => {
+    task.update({ titre: "Nouveau titre", description: "Desc" });
+    const evTitle = task.history.find((e) => e.type === "UPDATE_TITLE");
+    const evDesc = task.history.find((e) => e.type === "UPDATE_DESCRIPTION");
+    expect(evTitle.data.from).toBe("Tâche historique");
+    expect(evTitle.data.to).toBe("Nouveau titre");
+    expect(evDesc.data.to).toBe("Desc");
+  });
+
+  test("enregistre les changements de priorité, tags et dueDate", () => {
+    task.setPriority("HIGH");
+    task.addTags("foo");
+    const d = new Date();
+    task.setDueDate(d);
+    const types = task.history.map((e) => e.type);
+    expect(types).toContain("SET_PRIORITY");
+    expect(types).toContain("ADD_TAG");
+    expect(types).toContain("SET_DUE_DATE");
   });
 });

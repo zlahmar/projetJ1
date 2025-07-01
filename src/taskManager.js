@@ -11,158 +11,157 @@ class TaskManager {
 
   assignTask(taskId, userId) {
     const task = this.getTaskById(taskId);
-    if (!task) {
-      throw new Error('Task not found');
-    }
+    if (!task) throw new Error("Task not found");
 
+    const old = task.assignee;
     if (userId === null) {
       task.assignee = null;
-      return task;
+    } else {
+      const user = this.userManager.getUserById(userId);
+      if (!user) throw new Error("User not found");
+      task.assignee = user;
     }
-
-    const user = this.userManager.getUserById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    task.assignee = user;
+    task._recordEvent("ASSIGN", { from: old, to: task.assignee });
     return task;
   }
 
   getTaskById(id) {
-    return this.tasks.find((task) => task.id === id);
+    return this.tasks.find((t) => t.id === id);
   }
 
   listTasks(options = {}) {
     const {
       page = 1,
       limit = 20,
-      sort = { field: 'createdAt', order: 'desc' },
+      sort = { field: "createdAt", order: "desc" },
       filter = {},
     } = options;
 
-    if (limit <= 0) {
-      throw new Error('Invalid page size');
+    let filtered = [...this.tasks];
+
+    if (filter.status) {
+      filtered = filtered.filter((t) => t.statut === filter.status);
     }
-
-    const { status, search, assigneeId } = filter;
-
-    // Valider l'utilisateur si l'ID est fourni (et non undefined/null)
-    if (assigneeId) {
-      if (!this.userManager.getUserById(assigneeId)) {
-        throw new Error('User not found');
-      }
-    }
-    
-    let filteredTasks = [...this.tasks];
-
-    // --- Logique de Filtrage ---
-    if (status) {
-      const allowedStatus = ['TODO', 'ONGOING', 'DONE'];
-      if (!allowedStatus.includes(status)) {
-        throw new Error('Invalid filter status');
-      }
-      filteredTasks = filteredTasks.filter((task) => task.statut === status);
-    }
-
-    if (search) {
-      const lowerCaseQuery = search.toLowerCase();
-      filteredTasks = filteredTasks.filter(
-        (task) =>
-          task.titre.toLowerCase().includes(lowerCaseQuery) ||
-          (task.description &&
-            task.description.toLowerCase().includes(lowerCaseQuery)),
+    if (filter.search) {
+      const q = filter.search.toLowerCase();
+      filtered = filtered.filter(
+        (t) =>
+          t.titre.toLowerCase().includes(q) ||
+          (t.description && t.description.toLowerCase().includes(q))
       );
     }
-    
-    if (assigneeId !== undefined) {
-      if (assigneeId === null) {
-        filteredTasks = filteredTasks.filter((task) => !task.assignee);
-      } else {
-        filteredTasks = filteredTasks.filter(
-          (task) => task.assignee && task.assignee.id === assigneeId,
-        );
-      }
+    if (filter.assigneeId !== undefined) {
+      filtered = filtered.filter((t) =>
+        filter.assigneeId === null
+          ? !t.assignee
+          : t.assignee && t.assignee.id === filter.assigneeId
+      );
+    }
+    if (filter.dueOverdue === true) {
+      filtered = filtered.filter((t) => t.isOverdue());
+    }
+    if (filter.priority) {
+      filtered = filtered.filter((t) => t.priority === filter.priority);
+    }
+    if (filter.tags && Array.isArray(filter.tags)) {
+      filtered = filtered.filter((t) =>
+        t.tags.some((tag) => filter.tags.includes(tag))
+      );
     }
 
-    // --- Logique de Tri ---
-    const allowedSortBy = ['createdAt', 'title', 'status'];
-    if (sort && !allowedSortBy.includes(sort.field)) {
-      throw new Error('Invalid sort criteria');
+    const order = sort.order === "asc" ? 1 : -1;
+    if (sort.field === "title") {
+      filtered.sort((a, b) => a.titre.localeCompare(b.titre) * order);
+    } else if (sort.field === "status") {
+      const map = { TODO: 1, ONGOING: 2, DONE: 3 };
+      filtered.sort((a, b) => (map[a.statut] - map[b.statut]) * order);
+    } else if (sort.field === "priority") {
+      const map = { CRITICAL: 1, HIGH: 2, NORMAL: 3, LOW: 4 };
+      filtered.sort((a, b) => (map[a.priority] - map[b.priority]) * order);
+    } else {
+      filtered.sort((a, b) => (a.dateCreation - b.dateCreation) * order);
     }
 
-    filteredTasks.sort((a, b) => {
-      const fieldA = a[sort.field];
-      const fieldB = b[sort.field];
-      const order = sort.order === 'asc' ? 1 : -1;
-
-      if (sort.field === 'status') {
-        const statusOrder = { TODO: 1, ONGOING: 2, DONE: 3 };
-        return (statusOrder[a.statut] - statusOrder[b.statut]) * order;
-      }
-      if (sort.field === 'title') {
-        return a.titre.localeCompare(b.titre) * order;
-      }
-      // Tri par date par défaut
-      return (a.createdAt - b.createdAt) * order;
-    });
-
-    // --- Logique de Pagination ---
-    const totalItems = filteredTasks.length;
-    const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / limit);
-    const startIndex = (page - 1) * limit;
-    const paginatedData = filteredTasks.slice(startIndex, startIndex + limit);
+    const totalItems = filtered.length;
+    const totalPages = totalItems ? Math.ceil(totalItems / limit) : 0;
+    const start = (page - 1) * limit;
+    const data = filtered.slice(start, start + limit);
 
     return {
-      data: paginatedData,
-      pagination: {
-        totalItems,
-        totalPages,
-        currentPage: page,
-        itemsPerPage: limit,
-      },
+      data,
+      pagination: { totalItems, totalPages, currentPage: page, itemsPerPage: limit },
     };
   }
 
-  findTaskById(taskId) {
-    return this.tasks.find((task) => task.id === taskId);
+  updateTask(taskId, updates) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.update(updates);
   }
 
   updateTaskStatus(taskId, status) {
-    const allowedStatus = ["TODO", "ONGOING", "DONE"];
-    if (!allowedStatus.includes(status)) {
-      throw new Error("Invalid status. Allowed values: TODO, ONGOING, DONE");
-    }
-
-    const task = this.findTaskById(taskId);
-    if (!task) {
-      throw new Error("Task not found");
-    }
-
-    task.statut = status;
-    return task;
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.updateStatus(status);
   }
 
-  updateTask(taskId, updates) {
-    const task = this.findTaskById(taskId);
-    if (!task) {
-      throw new Error("Task not found");
-    }
+  setTaskDueDate(taskId, date) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.setDueDate(date);
+  }
 
-    // On délègue la logique de mise à jour à la tâche elle-même
-    task.update(updates);
+  clearTaskDueDate(taskId) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.clearDueDate();
+  }
 
-    return task;
+  setTaskPriority(taskId, priority) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.setPriority(priority);
+  }
+
+  addTaskTags(taskId, ...tags) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.addTags(...tags);
+  }
+
+  removeTaskTag(taskId, tag) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    return task.removeTag(tag);
+  }
+
+  getAllTags() {
+    const counts = this.tasks.reduce((acc, t) => {
+      t.tags.forEach((tag) => (acc[tag] = (acc[tag] || 0) + 1));
+      return acc;
+    }, {});
+    return Object.entries(counts).map(([tag, count]) => ({ tag, count }));
+  }
+
+  getTaskHistory(taskId, { page = 1, limit = 20 } = {}) {
+    const task = this.getTaskById(taskId);
+    if (!task) throw new Error("Task not found");
+    const sorted = [...task.history].sort(
+      (a, b) => b.date.getTime() - a.date.getTime()
+    );
+    const total = sorted.length;
+    const totalPages = total ? Math.ceil(total / limit) : 0;
+    const start = (page - 1) * limit;
+    return {
+      data: sorted.slice(start, start + limit),
+      pagination: { total, totalPages, currentPage: page, itemsPerPage: limit },
+    };
   }
 
   deleteTask(taskId) {
-    const taskIndex = this.tasks.findIndex((task) => task.id === taskId);
-
-    if (taskIndex === -1) {
-      throw new Error("Task not found");
-    }
-
-    this.tasks.splice(taskIndex, 1);
+    const idx = this.tasks.findIndex((t) => t.id === taskId);
+    if (idx === -1) throw new Error("Task not found");
+    this.tasks.splice(idx, 1);
   }
 }
 
