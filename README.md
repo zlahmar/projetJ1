@@ -43,13 +43,17 @@ Pour exécuter l'application et vérifier son bon fonctionnement :
    - Si l'application démarre sans erreur et affiche des informations sur les tâches ou utilisateurs, c'est que l'installation est correcte.
    - Pour tester les fonctionnalités, modifiez ou ajoutez des instructions dans `index.js` (par exemple, création de tâches, d'utilisateurs, etc.).
 
-3. **Lancer les tests automatiques**
+3. **Lancer les tests**
 
-   Pour vérifier que toutes les fonctionnalités sont conformes aux user stories, lancez :
+   Le projet utilise [Jest](https://jestjs.io/) comme framework de tests automatisés.
+
+   Pour exécuter la suite de tests :
 
    ```bash
    npm test
    ```
+
+   Si Jest n'est pas installé globalement, il sera installé automatiquement via les dépendances du projet (`npm install`).
 
    Tous les tests doivent passer pour garantir le bon fonctionnement de l'application.
 
