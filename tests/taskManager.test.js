@@ -80,8 +80,8 @@ describe("TaskManager", () => {
     expect(data.map((t) => t.titre)).toEqual(["A", "B", "C"]);
   });
 
-  // US001 - Créer une tâche
-  describe("US014 - setTaskDueDate & clearTaskDueDate", () => {
+  // US014 - Définir une date d'échéance
+  describe("US014 - Définir une date d'échéance", () => {
     test("erreur si l'ID n'existe pas", () => {
       expect(() =>
         taskManager.setTaskDueDate("fakeId", new Date())
@@ -169,8 +169,8 @@ describe("TaskManager", () => {
     });
   });
 
-  // US018 - getTaskHistory
-  describe("US018 - getTaskHistory", () => {
+  // US018 - Consulter l'historique d'une tâche
+  describe("US018 - Consulter l'historique d'une tâche", () => {
     test("retourne les événements triés et paginés", () => {
       const t = taskManager.addTask(new Task("Hist"));
       taskManager.updateTask(t.id, { titre: "1" });

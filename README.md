@@ -85,6 +85,11 @@ Pour exécuter l'application et vérifier son bon fonctionnement :
 
 - **US012 - Assigner une tâche**
 - **US013 - Filtrer par utilisateur assigné**
+- **US014 - Définir une date d'échéance**
+- **US015 - Filtrer les tâches en retard**
+- **US016 - Définir des priorités et tri/filter**
+- **US017 - Catégoriser avec des tags**
+- **US018 - Consulter l'historique d'une tâche**
 
 ## Structure du projet
 
