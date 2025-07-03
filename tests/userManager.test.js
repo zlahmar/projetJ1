@@ -25,11 +25,8 @@ describe('UserManager', () => {
     );
   });
 
-      // Critère : Retourne null si utilisateur non trouvé (US010)
-  test('devrait retourner null si aucun utilisateur n\'est trouvé par ID', () => {
-    const user = userManager.getUserById('id-non-existant');
-
-    expect(user).toBeNull();
+  test('devrait lever une erreur "User not found" si aucun utilisateur n\'est trouvé par ID', () => {
+    expect(() => userManager.getUserById('id-non-existant')).toThrow('User not found');
   });
 
   // US011 - Lister les utilisateurs
@@ -40,7 +37,7 @@ describe('UserManager', () => {
       userManager.addUser('Bob', 'bob@example.com');
     });
 
-          // Critère : Liste vide si aucun utilisateur (US011)
+    // Critère : Liste vide si aucun utilisateur (US011)
     test('devrait retourner une liste vide si aucun utilisateur n\'existe', () => {
       userManager = new UserManager();
 
@@ -50,7 +47,7 @@ describe('UserManager', () => {
       expect(result.pagination.totalItems).toBe(0);
     });
 
-          // Critère : Tri par nom par défaut (US011)
+    // Critère : Tri par nom par défaut (US011)
     test('devrait retourner tous les utilisateurs triés par nom par défaut', () => {
       const result = userManager.listUsers();
 
@@ -60,7 +57,7 @@ describe('UserManager', () => {
       expect(result.data[2].nom).toBe('Charlie');
     });
 
-          // Critère : Pagination des utilisateurs (US011)
+    // Critère : Pagination des utilisateurs (US011)
     test('devrait retourner une liste paginée d\'utilisateurs', () => {
       const result = userManager.listUsers({ page: 1, limit: 2 });
 
@@ -72,7 +69,7 @@ describe('UserManager', () => {
       expect(result.pagination.totalItems).toBe(3);
     });
 
-          // Critère : Pagination, accès à la 2eme page (US011)
+    // Critère : Pagination, accès à la 2eme page (US011)
     test('devrait retourner la deuxième page de la liste paginée', () => {
       const result = userManager.listUsers({ page: 2, limit: 2 });
 
